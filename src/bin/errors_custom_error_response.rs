@@ -1,5 +1,7 @@
-use actix_web::{HttpServer, App, get, error, Result, dev::HttpResponseBuilder, http::header,
-                http::StatusCode, HttpResponse, middleware::Logger};
+use actix_web::{
+    dev::HttpResponseBuilder, error, get, http::header, http::StatusCode, middleware::Logger, App,
+    HttpResponse, HttpServer, Result,
+};
 use derive_more::{Display, Error};
 use log::debug;
 
@@ -16,8 +18,10 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default()) // 添加默认的日志设置
             .service(index)
             .service(user_error)
-    }).bind("127.0.0.1:8080")?
-        .run().await
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
 
 #[derive(Debug, Display, Error)]
@@ -43,14 +47,14 @@ impl error::ResponseError for MyError {
         match *self {
             MyError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
             MyError::BadClientData => StatusCode::BAD_REQUEST,
-            MyError::Timeout => StatusCode::GATEWAY_TIMEOUT
+            MyError::Timeout => StatusCode::GATEWAY_TIMEOUT,
         }
     }
 }
 
 #[get("/error")]
 async fn index() -> Result<&'static str, MyError> {
-    let err =MyError::BadClientData;
+    let err = MyError::BadClientData;
     debug!("{}", err);
     Err(err)
 }
@@ -58,9 +62,7 @@ async fn index() -> Result<&'static str, MyError> {
 #[derive(Debug, Display, Error)]
 enum UserError {
     #[display(fmt = "Validation error on field: {}", field)]
-    Validation {
-        field: String
-    }
+    Validation { field: String },
 }
 
 impl error::ResponseError for UserError {
@@ -79,7 +81,9 @@ impl error::ResponseError for UserError {
 
 #[get("userError")]
 async fn user_error() -> Result<&'static str, UserError> {
-    let error = UserError::Validation {field: "username".to_string()};
+    let error = UserError::Validation {
+        field: "username".to_string(),
+    };
     debug!("{}", error);
     Err(error)
 }

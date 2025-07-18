@@ -12,7 +12,9 @@ async fn hello() -> impl Responder {
 }
 
 #[get("/test")]
-async fn test() -> String { "Direct Response String".to_string()}
+async fn test() -> String {
+    "Direct Response String".to_string()
+}
 
 #[get("/")]
 async fn other() -> impl Responder {
@@ -40,9 +42,10 @@ async fn main() -> std::io::Result<()> {
             .service(test)
             .service(echo)
             .service(other)
-        // v2 版本的写法
+            // v2 版本的写法
             .route("/hey", web::get().to(manual_hello))
-    }).bind("127.0.0.1:8080")?
-        .run().await
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
-

@@ -1,4 +1,4 @@
-use actix_web::{HttpServer, App, web, get, HttpRequest};
+use actix_web::{get, web, App, HttpRequest, HttpServer};
 use serde::Deserialize;
 
 /// ## 类型安全的信息提取器
@@ -26,11 +26,14 @@ async fn main() -> std::io::Result<()> {
         // user_id 被反序列化为一个u32
         // friend 被反序列化为一个String
         // {} 占位符
-        App::new().route("/users/{user_id}/{friend}", web::get().to(get_user))
+        App::new()
+            .route("/users/{user_id}/{friend}", web::get().to(get_user))
             .service(get_obj)
             .service(query)
-    }).bind("127.0.0.1:8080")?
-        .run().await
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
 
 /// 反序列化成一个元组
@@ -49,14 +52,17 @@ async fn get_obj(info: web::Path<User>) -> String {
         "Good! Equal user_id".to_string()
     } else {
         // 否则返回一个新的String
-        format!("this is new User [user_id:{}, friend:{}]", my_info.user_id, my_info.friend)
+        format!(
+            "this is new User [user_id:{}, friend:{}]",
+            my_info.user_id, my_info.friend
+        )
     }
 }
 
 #[get("/query/{age}/{username}")] // 定义请求路径参数
 async fn query(req: HttpRequest) -> String {
     let age: u32 = req.match_info().get("age").unwrap().parse().unwrap();
-    let username:String = req.match_info().query("username").parse().unwrap();
+    let username: String = req.match_info().query("username").parse().unwrap();
     format!("Hello {} your age:{}", username, age)
 }
 

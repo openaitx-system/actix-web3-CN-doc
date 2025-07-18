@@ -1,4 +1,4 @@
-use actix_web::{web, HttpServer, App, HttpRequest, get};
+use actix_web::{get, web, App, HttpRequest, HttpServer};
 /// ## Request Handlers
 /// 一个请求处理器，它是一个异步函数，可以接收零个或多个参数，而这些参数被实现了(ie, impl FromRequest)的请求所提取，
 /// 并且返回一个被转换成 HttpResponse或者其实现(ie, impl Responder)的类型.
@@ -33,12 +33,14 @@ use actix_web::{web, HttpServer, App, HttpRequest, get};
 /// ```
 #[actix_web::main()]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(||{
-        App::new().service(index_two)
+    HttpServer::new(|| {
+        App::new()
+            .service(index_two)
             .route("/", web::get().to(index))
     })
-        .bind("127.0.0.1:8080")?
-        .run().await
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
 
 async fn index(_req: HttpRequest) -> &'static str {
@@ -49,4 +51,3 @@ async fn index(_req: HttpRequest) -> &'static str {
 async fn index_two(_req: HttpRequest) -> String {
     "Hello world".to_string()
 }
-
