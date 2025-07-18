@@ -1,12 +1,11 @@
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpServer, App, web};
 use actix_service::{Service, Transform};
+use actix_web::{dev::ServiceRequest, dev::ServiceResponse, web, App, Error, HttpServer};
 
 use futures::future::{ok, Ready};
 use futures::{Future, FutureExt};
 
 use std::pin::Pin;
 use std::task::{Context, Poll};
-
 
 /// 中间件使用示例所表达的意图是:
 /// 在请求进来时且并处理函数处理之前，我们可以对请求做一些操作。
@@ -16,17 +15,20 @@ use std::task::{Context, Poll};
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         let app = App::new().wrap_fn(|req, srv| {
-           println!("Hi form start. You requested: {}", req.path());
+            println!("Hi form start. You requested: {}", req.path());
             srv.call(req).map(|res| {
                 println!("Hi form response");
                 res
             })
         });
-        app.route("/middleware", web::get().to(|| async {
-            "Hello Middleware"
-        }))
-    }).bind("127.0.0.1:8080")?
-        .run().await
+        app.route(
+            "/middleware",
+            web::get().to(|| async { "Hello Middleware" }),
+        )
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
 
 /// 在中间件处理过程器有两步.
@@ -38,10 +40,10 @@ pub struct SayHi;
 /// `S` - 下一个服务类型
 /// `B` - 响应body类型
 impl<S, B> Transform<S> for SayHi
-    where
-        S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
@@ -60,10 +62,10 @@ pub struct SayHiMiddleware<S> {
 }
 
 impl<S, B> Service for SayHiMiddleware<S>
-    where
-        S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
@@ -87,4 +89,3 @@ impl<S, B> Service for SayHiMiddleware<S>
         })
     }
 }
-

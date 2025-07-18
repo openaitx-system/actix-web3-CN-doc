@@ -1,4 +1,4 @@
-use actix_web::{web, get, App, HttpServer, Responder, guard, HttpResponse};
+use actix_web::{get, guard, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 
 /// ## 写一个应用
@@ -48,31 +48,36 @@ use std::sync::Mutex;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // 外部声明一个counter
-    let counter = web::Data::new(AppStateWithCounter{counter:Mutex::new(0)});
-    HttpServer::new(move ||{
+    let counter = web::Data::new(AppStateWithCounter {
+        counter: Mutex::new(0),
+    });
+    HttpServer::new(move || {
         // 移动所有权
         App::new()
             // 在初始化的时候添加一个状态，并启动应用, 也就是说，这里设置的data,可以被同一Scope中的所有route共享到
-            .data(AppState{app_name: String::from("Actix-web 3.0 demo")})
+            .data(AppState {
+                app_name: String::from("Actix-web 3.0 demo"),
+            })
             // 设置一个可变的State 在多个线程中共享, 适合在多个线程中需要修改的场景
-            .app_data(counter.clone())// 注册counter,为什么要用clone? 因为它需要在每个线程中共享
+            .app_data(counter.clone()) // 注册counter,为什么要用clone? 因为它需要在每个线程中共享
             .service(get_state)
             .configure(config) // 配置
             .configure(second_config)
             .service(
-            // 所有以 /app 开头的path都将被匹配
-            web::scope("/app")
-                // 为 /app 资源组添加一个Header guard Http Header 的Content-Type 必须为指定的类型
-                .guard(guard::Header("Content-Type","application/html"))
-                // 这里会处理 /app/index.html的 get 请求
-                .route("/index.html", web::get().to(index))
-                // 同一个scope下再注册一个route
-                .route("/getAppInfo", web::get().to(app_info))
-
-        )
+                // 所有以 /app 开头的path都将被匹配
+                web::scope("/app")
+                    // 为 /app 资源组添加一个Header guard Http Header 的Content-Type 必须为指定的类型
+                    .guard(guard::Header("Content-Type", "application/html"))
+                    // 这里会处理 /app/index.html的 get 请求
+                    .route("/index.html", web::get().to(index))
+                    // 同一个scope下再注册一个route
+                    .route("/getAppInfo", web::get().to(app_info)),
+            )
             .route("/", web::get().to(mutable_counter))
-    }).bind("127.0.0.1:8080")?
-        .run().await
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
 
 async fn index() -> impl Responder {
@@ -108,7 +113,7 @@ async fn mutable_counter(data: web::Data<AppStateWithCounter>) -> String {
 fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::resource("/t")
-            .route(web::get().to(|| HttpResponse::Ok().body("This is oneConfig Response")))
+            .route(web::get().to(|| HttpResponse::Ok().body("This is oneConfig Response"))),
     );
 }
 
@@ -117,6 +122,9 @@ fn second_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/secondScope")
             .guard(guard::Header("Content-Type", "application/text"))
-            .route("/test",web::get().to(|| HttpResponse::Ok().body("This is Second Config Response")))
+            .route(
+                "/test",
+                web::get().to(|| HttpResponse::Ok().body("This is Second Config Response")),
+            ),
     );
 }

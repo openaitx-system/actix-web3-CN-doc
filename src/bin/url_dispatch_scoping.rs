@@ -1,7 +1,7 @@
-use actix_web::{HttpServer, App, HttpResponse, web, get, HttpRequest, http, middleware};
-use serde::Deserialize;
-use actix_web::guard::Guard;
 use actix_web::dev::RequestHead;
+use actix_web::guard::Guard;
+use actix_web::{get, http, middleware, web, App, HttpRequest, HttpResponse, HttpServer};
+use serde::Deserialize;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -10,25 +10,28 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     HttpServer::new(|| {
-        App::new().service(
-            web::scope("/users")
-                // 路径规范化默认情况下会，总是在path尾部添加一个 /
-                // 这意味着不管是使用声明式宏,还是手动.route()方式注册的 path都要以 / 结尾
-                // 否则将不能访问, 但Client 请求path /user/show/ 或 /user/show 都可以
-                // 甚至你的 path = /users//show/// 都能正常访问, 这就是NormalizePath的优点
-                .wrap(middleware::NormalizePath::default())
-                .guard(ContentTypeHeader)
-                // .guard(guard::Not(ContentTypeHeader))  // 这一句会反转guard 含义，表示所有带 Content-Type 的请求都不能过.
-                .service(show_users)
-                .service(user_detail)
-                .service(get_matches)
-                .service(get_username)
-        ).service(external_resource)
+        App::new()
+            .service(
+                web::scope("/users")
+                    // 路径规范化默认情况下会，总是在path尾部添加一个 /
+                    // 这意味着不管是使用声明式宏,还是手动.route()方式注册的 path都要以 / 结尾
+                    // 否则将不能访问, 但Client 请求path /user/show/ 或 /user/show 都可以
+                    // 甚至你的 path = /users//show/// 都能正常访问, 这就是NormalizePath的优点
+                    .wrap(middleware::NormalizePath::default())
+                    .guard(ContentTypeHeader)
+                    // .guard(guard::Not(ContentTypeHeader))  // 这一句会反转guard 含义，表示所有带 Content-Type 的请求都不能过.
+                    .service(show_users)
+                    .service(user_detail)
+                    .service(get_matches)
+                    .service(get_username),
+            )
+            .service(external_resource)
             .external_resource("youtube", "https://youtube.com/watch/{video_id}")
-    }).bind("127.0.0.1:8080")?
-        .run().await
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
-
 
 #[get("/show/")]
 async fn show_users() -> HttpResponse {
@@ -36,14 +39,14 @@ async fn show_users() -> HttpResponse {
 }
 
 #[get("/show/{id}/")]
-async fn user_detail(path: web::Path<(u32, )>) -> HttpResponse {
+async fn user_detail(path: web::Path<(u32,)>) -> HttpResponse {
     HttpResponse::Ok().body(format!("User detail: {}", path.into_inner().0))
 }
 
 #[get("/matcher/{v1}/{v2}/")]
 async fn get_matches(req: HttpRequest) -> String {
     // 直接根据替换表达式名获取一个值
-    let v1:u8 = req.match_info().get("v1").unwrap().parse().unwrap();
+    let v1: u8 = req.match_info().get("v1").unwrap().parse().unwrap();
 
     let v2: String = req.match_info().query("v2").parse().unwrap();
 
@@ -67,10 +70,12 @@ async fn get_username(data: web::Path<Info>) -> String {
 async fn external_resource(req: HttpRequest) -> HttpResponse {
     let url = req.url_for("youtube", &["oHg5SJYRHA0"]).unwrap();
 
-    assert_eq!(url.as_str(),"https://youtube.com/watch/oHg5SJYRHA0");
+    assert_eq!(url.as_str(), "https://youtube.com/watch/oHg5SJYRHA0");
 
     // 手动修改一下header中的内容
-    HttpResponse::Ok().header("Content-Type","text/plain").body(url.into_string())
+    HttpResponse::Ok()
+        .header("Content-Type", "text/plain")
+        .body(url.into_string())
 }
 
 struct ContentTypeHeader;
@@ -80,6 +85,3 @@ impl Guard for ContentTypeHeader {
         request.headers().contains_key(http::header::CONTENT_TYPE)
     }
 }
-
-
-

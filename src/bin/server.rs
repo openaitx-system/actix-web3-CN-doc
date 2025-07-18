@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer, rt::System};
+use actix_web::{rt::System, web, App, HttpResponse, HttpServer};
 use std::sync::mpsc;
 use std::thread;
 
@@ -97,13 +97,13 @@ async fn main() {
         let sys = System::new("http-server");
         let server = HttpServer::new(|| {
             App::new().service(
-                web::scope("/app")
-                    .route("/test", web::get().to(|| HttpResponse::Ok().body("Ok")))
+                web::scope("/app").route("/test", web::get().to(|| HttpResponse::Ok().body("Ok"))),
             )
-        }).workers(4)  // 自定义workers数量
-            .bind("127.0.0.1:8080")?
-            .shutdown_timeout(60)// 设置shutdown 时间为60秒
-            .run();
+        })
+        .workers(4) // 自定义workers数量
+        .bind("127.0.0.1:8080")?
+        .shutdown_timeout(60) // 设置shutdown 时间为60秒
+        .run();
         let _ = tx.send(server);
         println!("New Http Server Started op Port 8080");
         sys.run() // 会启动一个 event loop 服务直到 stop()方法被调用

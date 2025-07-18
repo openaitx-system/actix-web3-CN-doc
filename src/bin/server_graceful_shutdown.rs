@@ -1,4 +1,4 @@
-use actix_web::{get,App, HttpServer};
+use actix_web::{get, App, HttpServer};
 
 /// ## Graceful shutdown
 /// HttpServer 支持优雅关机. 在接收到停机信号后，worker线程有一定的时间来完成请求. 超过时间后的所有worker都会被强制drop掉.
@@ -14,9 +14,10 @@ use actix_web::{get,App, HttpServer};
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| App::new().service(index))
-        .shutdown_timeout(60)// 设置关闭时间为60秒 超时后强制关闭worker
+        .shutdown_timeout(60) // 设置关闭时间为60秒 超时后强制关闭worker
         .bind("127.0.0.1:8080")?
-        .run().await
+        .run()
+        .await
 }
 
 #[get("/index")]

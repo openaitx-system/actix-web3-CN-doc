@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpServer, HttpResponse};
+use actix_web::{web, App, HttpResponse, HttpServer};
 
 /// ## Keep-Alive
 /// Actix 可以在keep-alive 链接上等待请求.
@@ -23,17 +23,16 @@ use actix_web::{web, App, HttpServer, HttpResponse};
 /// ```
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let one = HttpServer::new(||{
-        App::new().route("/", web::get().to(|| HttpResponse::Ok().body("Ok")))
-    }).keep_alive(75); // 设置keep alive 时间为75秒
-    // let _two = HttpServer::new(||{
-    //     App::new().route("/", web::get().to(|| HttpResponse::Ok().body("Ok")))
-    // }).keep_alive(); // 使用"SO_KEEPALIVE" socket 选项
+    let one =
+        HttpServer::new(|| App::new().route("/", web::get().to(|| HttpResponse::Ok().body("Ok"))))
+            .keep_alive(75); // 设置keep alive 时间为75秒
+                             // let _two = HttpServer::new(||{
+                             //     App::new().route("/", web::get().to(|| HttpResponse::Ok().body("Ok")))
+                             // }).keep_alive(); // 使用"SO_KEEPALIVE" socket 选项
 
-    let _three = HttpServer::new(||{
-        App::new().route("/", web::get().to(|| HttpResponse::Ok().body("Ok")))
-    }).keep_alive(None); // 关闭keep alive
+    let _three =
+        HttpServer::new(|| App::new().route("/", web::get().to(|| HttpResponse::Ok().body("Ok"))))
+            .keep_alive(None); // 关闭keep alive
 
     one.bind("127.0.0.1:8080")?.run().await
 }
-

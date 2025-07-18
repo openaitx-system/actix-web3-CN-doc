@@ -1,7 +1,6 @@
-use actix_web::{HttpServer, App, HttpResponse, Responder, HttpRequest, Error,get};
-use serde::Serialize;
+use actix_web::{get, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
 use futures::future::{ready, Ready};
-
+use serde::Serialize;
 
 /// ## Response with custom Type (返回自定义类型)
 /// 为了直接从处理函数返回自定义类型的话, 需要这个类型实现 Responder trait.
@@ -16,27 +15,25 @@ use futures::future::{ready, Ready};
 /// ```
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(||{
-        App::new().service(index)
-    })
+    HttpServer::new(|| App::new().service(index))
         .bind(SERVER_ADDRESS)?
-        .run().await
+        .run()
+        .await
 }
 
 #[derive(Serialize)]
 struct MyObj {
-    name: &'static str
+    name: &'static str,
 }
 
 //响应Content-Type
-const CONTENT_TYPE:&str = "application/json";
-const SERVER_ADDRESS:&str = "127.0.0.1:8080";
+const CONTENT_TYPE: &str = "application/json";
+const SERVER_ADDRESS: &str = "127.0.0.1:8080";
 
 /// 自定义Responder实现
 impl Responder for MyObj {
     type Error = Error;
     type Future = Ready<Result<HttpResponse, Error>>;
-
 
     fn respond_to(self, _req: &HttpRequest) -> Self::Future {
         // 先把self 序列化成一个json字符串
@@ -49,6 +46,5 @@ impl Responder for MyObj {
 
 #[get("/")]
 async fn index() -> MyObj {
-    MyObj{name: "user"}
+    MyObj { name: "user" }
 }
-

@@ -1,16 +1,15 @@
-use actix_web::{HttpServer, App, post, web, Error, HttpResponse, error};
+use actix_web::{error, post, web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new().service(index_manual)
-    }).bind("127.0.0.1:8080")?
-        .run().await
+    HttpServer::new(|| App::new().service(index_manual))
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 }
-
 
 #[derive(Deserialize, Serialize)]
 struct MyObj {
@@ -36,6 +35,5 @@ async fn index_manual(mut payload: web::Payload) -> Result<HttpResponse, Error> 
 
     // body 被导入了，现在我们使用 serde_json 反序列化它
     let obj = serde_json::from_slice::<MyObj>(&body)?;
-    Ok(HttpResponse::Ok().json(obj))  // 返回响应
+    Ok(HttpResponse::Ok().json(obj)) // 返回响应
 }
-
